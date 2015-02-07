@@ -24,22 +24,18 @@ void loop()
 {
   EthernetClient client = server.available();
   if (client) {
-    // an http request ends with a blank line
     boolean current_line_is_blank = true;
     while (client.connected()) {
       if (client.available()) {
         char c = client.read();
-        // if we've gotten to the end of the line (received a newline
-        // character) and the line is blank, the http request has ended,
-        // so we can send a reply
         if (c == '\n' && current_line_is_blank) {
           float h = dht.readHumidity();
           float t = dht.readTemperature();
-          // send a standard http response header
           client.println("HTTP/1.1 200 OK");
           client.println("Content-Type: text/xml");
           client.println();
           client.println("<?xml version=\"1.0\"?>");
+          client.println("<root>");
           client.println("<node>");
           client.println("\t<name>Salon</name>");
           client.println("\t<sensor>");
@@ -57,18 +53,16 @@ void loop()
           client.println("\t\t<type>DHT22</type>");
           client.println("\t</sensor>");
           client.println("</node>");
+          client.println("</root>");
           break;
         }
         if (c == '\n') {
-          // we're starting a new line
           current_line_is_blank = true;
         } else if (c != '\r') {
-          // we've gotten a character on the current line
           current_line_is_blank = false;
         }
       }
     }
-    // give the web browser time to receive the data
     delay(5);
     client.stop();
   }
